@@ -1,0 +1,33 @@
+<!doctype html><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<title>webterm</title>
+<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}
+#w{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column}
+#b{flex:none;height:20px;display:flex;gap:2px;background:#111;overflow-x:auto;scrollbar-width:none}
+#b::-webkit-scrollbar{display:none}
+#b button{flex:none;border:0;background:#333;color:#ccc;font-size:12px;line-height:20px;padding:0 10px;height:20px}
+#v{flex:none;color:#6c6;font:11px/20px monospace;padding:0 6px}
+#b .sp{margin-left:auto}
+#f{flex:1;min-height:0;width:100%;border:0}</style>
+<div id="w"><div id="b"><span id="v">v?</span><button data-k="\u001b">Esc</button><button data-k="\t">Tab</button><button id="c">Ctrl</button><button data-k="\u0003">^C</button><button data-k="\u0004">^D</button><button data-k="\u001b[A">&uarr;</button><button data-k="\u001b[B">&darr;</button><button data-k="\u001b[D">&larr;</button><button data-k="\u001b[C">&rarr;</button><button data-k="\u001b[H">Home</button><button data-k="\u001b[F">End</button><button data-k="\u001b[5~">PgUp</button><button data-k="\u001b[6~">PgDn</button><button data-k="\u001b[3~">Del</button><button id="s" class="sp">Tela cheia</button><button id="k">&#9000;</button><button id="n">&#8599;</button></div><iframe id="f" allow="clipboard-read; clipboard-write"></iframe></div>
+<script>
+var f=document.getElementById('f'),w=document.getElementById('w'),cb=document.getElementById('c'),sb=document.getElementById('s'),af=0,ak=0,NA=/[?&]noauto=1/.test(location.search);
+f.src='/t'+location.search;var IV='4.2',vs=document.getElementById('v');vs.textContent='v'+IV+' t..';f.addEventListener('load',function(){var t='?';try{t=f.contentWindow.V||'?'}catch(e){}vs.textContent='v'+IV+' t'+t});
+function kb(){try{if(document.activeElement===f&&f.contentDocument.activeElement===f.contentWindow.term.textarea)return}catch(e){}f.focus();try{f.contentWindow.focus();f.contentWindow.term.focus()}catch(e){}}
+function sk(d){try{f.contentWindow.sk(d)}catch(e){}kb()}
+document.getElementById('b').addEventListener('click',function(e){var k=e.target.dataset&&e.target.dataset.k;if(k)sk(JSON.parse('"'+k+'"'))});
+cb.addEventListener('click',function(){try{cb.style.background=f.contentWindow.tc()?'#a60':'#333'}catch(e){}kb()});
+window.rc=function(){cb.style.background='#333'};
+document.getElementById('k').addEventListener('click',kb);
+document.getElementById('n').addEventListener('click',function(){window.open(location.href,'_blank')});
+var fe=function(){return document.fullscreenElement||document.webkitFullscreenElement};
+function fs(){var d=document.documentElement;try{if(fe()){(document.exitFullscreen||document.webkitExitFullscreen).call(document)}else{(d.requestFullscreen||d.webkitRequestFullscreen).call(d)}}catch(e){}}
+sb.addEventListener('click',fs);
+function lb(){sb.textContent=fe()?'Sair':'Tela cheia';if(!NA)setTimeout(kb,300)}
+document.addEventListener('fullscreenchange',lb);document.addEventListener('webkitfullscreenchange',lb);
+window.autofs=function(){if(NA)return;if(!ak){ak=1;setTimeout(kb,400)}if(af||fe())return;af=1;fs()};
+document.addEventListener('pointerup',function(e){if(e.target!==sb)window.autofs()});
+if(!NA)f.addEventListener('load',function(){setTimeout(kb,300)});
+var vv=window.visualViewport,fx=function(){w.style.height=(vv?vv.height:innerHeight)+'px'};
+vv&&vv.addEventListener('resize',fx);addEventListener('resize',fx);
+</script>

@@ -1,0 +1,33 @@
+<!doctype html><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>webterm</title>
+<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#t{position:fixed;inset:0}.xterm-helper-textarea{left:0!important;top:auto!important;bottom:0!important;width:24px!important;height:24px!important;opacity:.02!important;z-index:5!important;font-size:16px!important}</style>
+<div id="t"></div>
+<script>var Q=location.search;document.write('<link rel=stylesheet href="/x.css'+Q+'"><script src="/x.js'+Q+'"><\/script><script src="/f.js'+Q+'"><\/script>')</script>
+<script>
+var el=document.getElementById('t'),tk=new URLSearchParams(location.search).get('t')||'',
+term=new Terminal({fontSize:16,theme:{background:'#000'}}),fit=new FitAddon.FitAddon(),ws;
+term.loadAddon(fit);term.open(el);fit.fit();(function(t){t.setAttribute('inputmode','text');t.setAttribute('autocapitalize','off');t.setAttribute('autocorrect','off');t.setAttribute('autocomplete','off')})(term.textarea);
+var V='4.2';function go(){ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+'/ws?t='+encodeURIComponent(tk)+'&cols='+term.cols+'&rows='+term.rows);
+ws.onmessage=function(e){term.write(e.data)};ws.onclose=function(){setTimeout(go,500)}}
+(function(t){var sp=function(){ws&&ws.readyState===1&&ws.send(' ')};
+t.addEventListener('keydown',function(e){if((e.key===' '||e.code==='Space'||e.keyCode===32)&&!e.isComposing&&e.keyCode!==229&&!e.ctrlKey&&!e.altKey&&!e.metaKey){sp();e.preventDefault();e.stopImmediatePropagation()}},true);
+t.addEventListener('beforeinput',function(e){if(e.data===' '&&!e.isComposing){sp();e.preventDefault();e.stopImmediatePropagation()}},true)})(term.textarea);
+(function(t){var na=/[^\x00-\x7f]/,dbg=/[?&]dbg=1/.test(location.search),ds=function(e){if(dbg&&ws&&ws.readyState===1)ws.send(JSON.stringify({type:'dbg',ev:e.type,key:e.key,code:e.code,kc:e.keyCode,data:e.data,it:e.inputType,comp:e.isComposing}))};
+['keydown','keyup','beforeinput','input','textInput','change','compositionstart','compositionupdate','compositionend','focus','blur'].forEach(function(n){t.addEventListener(n,ds,true)});var lv='';if(dbg)setInterval(function(){if(t.value!==lv){lv=t.value;if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'dbg',ev:'VAL',data:lv}))}},150);
+var sx=function(d){ws&&ws.readyState===1&&ws.send(d)};
+t.addEventListener('keydown',function(e){if(e.key&&e.key.length===1&&na.test(e.key)&&!e.isComposing&&!e.ctrlKey&&!e.altKey&&!e.metaKey){sx(e.key);e.preventDefault();e.stopImmediatePropagation()}},true);
+var k9=0;t.addEventListener('keydown',function(e){k9=e.keyCode===229?Date.now():0},true);t.addEventListener('beforeinput',function(e){if(e.data&&(na.test(e.data)||(k9&&Date.now()-k9<1500&&e.inputType==='insertText'))&&!e.isComposing&&e.inputType!=='insertCompositionText'){k9=0;sx(e.data);e.preventDefault();e.stopImmediatePropagation()}},true)})(term.textarea);
+(function(t){var sx=function(d){ws&&ws.readyState===1&&ws.send(d)};
+t.addEventListener('input',function(e){var it=e.inputType||'';
+if(!e.isComposing&&(it==='insertReplacementText'||it==='insertFromComposition'||it==='insertFromYank')){var d=e.data||t.value;if(d)sx(d);t.value='';e.stopImmediatePropagation()}},true)})(term.textarea);
+go();
+term.onData(function(d){ws.readyState===1&&ws.send(d)});
+term.onResize(function(s){ws.readyState===1&&ws.send(JSON.stringify({type:'resize',cols:s.cols,rows:s.rows}))});
+addEventListener('resize',function(){fit.fit()});
+addEventListener('pointerup',function(){term.focus()});
+addEventListener('pointerup',function(){try{parent.autofs&&parent.autofs()}catch(e){}});
+(function(t){window.sk=function(d){ws&&ws.readyState===1&&ws.send(d)};var ctl=0;window.tc=function(){ctl=!ctl;return ctl};
+var cc=function(c,e){if(ctl&&c&&c.length===1&&/[a-zA-Z@\[\\\]^_]/.test(c)){window.sk(String.fromCharCode(c.toUpperCase().charCodeAt(0)&31));ctl=0;try{parent.rc()}catch(x){}e.preventDefault();e.stopImmediatePropagation()}};
+t.addEventListener('keydown',function(e){cc(e.key,e)},true);t.addEventListener('beforeinput',function(e){cc(e.data,e)},true)})(term.textarea);
+</script>

@@ -1,0 +1,1 @@
+{"name":"webtermv4","private":true,"type":"module","scripts":{"start":"node server.js"},"dependencies":{"@xterm/xterm":"^5.5.0","@xterm/addon-fit":"^0.10.0","ws":"^8.18.0","@lydell/node-pty":"^1.1.0"}}
