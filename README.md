@@ -2,6 +2,11 @@
 
 Um único terminal no navegador (sem abas), feito para rodar em navegadores limitados como o da **TV Samsung 2024 (Tizen)**. É a versão leve do projeto: xterm.js + PTY via WebSocket, sem framework e sem WASM.
 
+## Uso rapido
+- Clone o repositorio
+- Rode `chmod +x start.sh && ./start.sh`
+- Abra a URL mostrada no terminal
+
 ## Como usar
 - Subir tudo (servidor + túnel + vigia): `setsid bash tunel.sh &` (na raiz do repositório)
 - Link fixo: http://bore.pub:37682/?t=TerminalSecreto
