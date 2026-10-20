@@ -1,19 +1,39 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd "$(dirname "$0")"
-
 PORT="${PORT:-7681}"
 HOST="${HOST:-0.0.0.0}"
-APP_SHELL="${APP_SHELL:-${SHELL:-/bin/bash}}"
 TOKEN="${TOKEN:-$(python3 - <<'PY'
 import secrets
 print(secrets.token_hex(6))
 PY
 )}"
-IP="$(hostname -I | awk '{print $1}')"
-URL="http://${IP}:${PORT}/?t=${TOKEN}"
+APP_SHELL="${APP_SHELL:-/bin/bash}"
+URL="http://127.0.0.1:${PORT}/?t=${TOKEN}"
 BROWSER_CMD="${BROWSER:-${browser:-}}"
+
+ensure_node() {
+  if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
+    return 0
+  fi
+
+  echo "Node.js/npm nao encontrados. Instalando Node.js LTS pelo script oficial para Debian..."
+
+  local SUDO=""
+  if command -v sudo >/dev/null 2>&1; then
+    SUDO="sudo"
+  fi
+
+  ${SUDO} apt-get update
+  ${SUDO} apt-get install -y ca-certificates curl gnupg
+  curl -fsSL https://deb.nodesource.com/setup_lts.x | ${SUDO} -E bash -
+  ${SUDO} apt-get install -y nodejs
+
+  node -v
+  npm -v
+}
+
+ensure_node
 
 if [ ! -d node_modules ]; then
   echo "[1/2] Instalando dependencias..."
@@ -22,7 +42,7 @@ else
   echo "[1/2] Dependencias ja presentes."
 fi
 
-if [ -n "$BROWSER_CMD" ]; then
+if [ -n "${BROWSER_CMD}" ]; then
   (
     for _ in $(seq 1 60); do
       if python3 - "$PORT" <<'PY'
@@ -35,7 +55,7 @@ s.close()
 raise SystemExit(0 if ok else 1)
 PY
       then
-        nohup sh -lc '"$1" "$2"' sh "$BROWSER_CMD" "$URL" >/dev/null 2>&1 &
+        nohup bash -lc '"$1" "$2"' bash "$BROWSER_CMD" "$URL" >/dev/null 2>&1 &
         exit 0
       fi
       sleep 1
@@ -47,7 +67,7 @@ echo "[2/2] Iniciando servidor..."
 echo ""
 echo "Abra no navegador:"
 echo "  $URL"
-if [ -n "$BROWSER_CMD" ]; then
+if [ -n "${BROWSER_CMD}" ]; then
   echo "Abrindo automaticamente com BROWSER/browser: $BROWSER_CMD"
 fi
 echo ""
