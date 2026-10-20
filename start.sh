@@ -1,39 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PORT="${PORT:-7681}"
-HOST="${HOST:-0.0.0.0}"
-TOKEN="${TOKEN:-$(python3 - <<'PY'
-import secrets
-print(secrets.token_hex(6))
-PY
-)}"
-APP_SHELL="${APP_SHELL:-/bin/bash}"
-URL="http://127.0.0.1:${PORT}/?t=${TOKEN}"
-BROWSER_CMD="${BROWSER:-${browser:-}}"
+cd "$(dirname "$0")"
 
-ensure_node() {
-  if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
-    return 0
-  fi
-
-  echo "Node.js/npm nao encontrados. Instalando Node.js LTS pelo script oficial para Debian..."
-
-  local SUDO=""
-  if command -v sudo >/dev/null 2>&1; then
-    SUDO="sudo"
-  fi
-
-  ${SUDO} apt-get update
-  ${SUDO} apt-get install -y ca-certificates curl gnupg
-  curl -fsSL https://deb.nodesource.com/setup_lts.x | ${SUDO} -E bash -
-  ${SUDO} apt-get install -y nodejs
-
-  node -v
-  npm -v
+install_node() {
+  echo "Instalando Node.js LTS..."
+  sudo apt-get update
+  sudo apt-get install -y curl ca-certificates gnupg
+  curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+  sudo apt-get install -y nodejs
 }
 
-ensure_node
+if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
+  install_node
+fi
 
 if [ ! -d node_modules ]; then
   echo "[1/2] Instalando dependencias..."
@@ -42,37 +22,46 @@ else
   echo "[1/2] Dependencias ja presentes."
 fi
 
-if [ -n "${BROWSER_CMD}" ]; then
-  (
-    for _ in $(seq 1 60); do
-      if python3 - "$PORT" <<'PY'
-import socket
-import sys
-s = socket.socket()
-s.settimeout(0.2)
-ok = s.connect_ex(("127.0.0.1", int(sys.argv[1]))) == 0
-s.close()
-raise SystemExit(0 if ok else 1)
-PY
-      then
-        nohup bash -lc '"$1" "$2"' bash "$BROWSER_CMD" "$URL" >/dev/null 2>&1 &
-        exit 0
-      fi
-      sleep 1
-    done
-  ) &
-fi
-
 echo "[2/2] Iniciando servidor..."
-echo ""
-echo "Abra no navegador:"
-echo "  $URL"
-if [ -n "${BROWSER_CMD}" ]; then
-  echo "Abrindo automaticamente com BROWSER/browser: $BROWSER_CMD"
-fi
-echo ""
-echo "Variaveis opcionais: PORT, HOST, TOKEN, APP_SHELL, BROWSER"
-echo "Pressione Ctrl+C para parar."
-echo ""
 
-HOST="$HOST" PORT="$PORT" TOKEN="$TOKEN" SHELL="$APP_SHELL" npm start
+LOG_FILE="$(mktemp)"
+cleanup() {
+  if [ -n "${TAIL_PID:-}" ] && kill -0 "$TAIL_PID" 2>/dev/null; then
+    kill "$TAIL_PID" 2>/dev/null || true
+  fi
+  if [ -n "${APP_PID:-}" ] && kill -0 "$APP_PID" 2>/dev/null; then
+    kill "$APP_PID" 2>/dev/null || true
+  fi
+  rm -f "$LOG_FILE"
+}
+trap cleanup EXIT INT TERM
+
+npm start >"$LOG_FILE" 2>&1 &
+APP_PID=$!
+tail -n +1 -f "$LOG_FILE" &
+TAIL_PID=$!
+
+URL=""
+for _ in $(seq 1 60); do
+  if grep -q 'http://IP:' "$LOG_FILE"; then
+    URL="$(grep -m1 -o 'http://IP:[^[:space:]]*' "$LOG_FILE" | sed 's#http://IP:#http://127.0.0.1:#')"
+    break
+  fi
+  sleep 1
+done
+
+if [ -n "$URL" ]; then
+  echo
+  echo "Abrindo automaticamente no navegador..."
+  if [ -n "${browser:-}" ]; then
+    nohup "${browser}" "$URL" >/dev/null 2>&1 &
+  elif [ -n "${BROWSER:-}" ]; then
+    nohup "${BROWSER}" "$URL" >/dev/null 2>&1 &
+  else
+    nohup xdg-open "$URL" >/dev/null 2>&1 &
+  fi
+  echo "$URL"
+  echo
+fi
+
+wait "$APP_PID"
