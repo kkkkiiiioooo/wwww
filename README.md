@@ -104,3 +104,11 @@ Fora do sandbox: bore.pub:37682 → túnel (bore) → localhost:7681.
 
 ## v4.2 (ditado)
 beforeinput insertText até 1,5 s depois de keydown 229 é enviado direto ao shell, com ou sem acento (contorna o xterm 5.5.0, que descarta: PR #6009 e issues #6045/#6185 em github.com/xtermjs/xterm.js, todos abertos). Rollback: git checkout 4-palavras-funcionam.
+
+## Inicio rapido
+
+```bash
+BROWSER=firefox ./start.sh
+```
+
+Se `BROWSER` (ou `browser`) estiver definido, `./start.sh` abre a aplicacao automaticamente nesse navegador quando o servidor ficar pronto.
