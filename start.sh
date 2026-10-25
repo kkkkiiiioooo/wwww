@@ -54,11 +54,11 @@ if [ -n "$URL" ]; then
   echo
   echo "Abrindo automaticamente no navegador..."
   if [ -n "${browser:-}" ]; then
-    nohup "${browser}" "$URL" >/dev/null 2>&1 &
+    TOKEN="" nohup "${browser}" "$URL" >/dev/null 2>&1 &
   elif [ -n "${BROWSER:-}" ]; then
-    nohup "${BROWSER}" "$URL" >/dev/null 2>&1 &
+    TOKEN="" nohup "${BROWSER}" "$URL" >/dev/null 2>&1 &
   else
-    nohup xdg-open "$URL" >/dev/null 2>&1 &
+    TOKEN="" nohup xdg-open "$URL" >/dev/null 2>&1 &
   fi
   echo "$URL"
   echo
